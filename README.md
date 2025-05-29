@@ -2,9 +2,11 @@
 
 ![flow_chart.png](attachment:c0182734-5019-4e01-9679-103c35a082b2:flow_chart.png)
 
+
 # 📂 Directory Structure
 
 .
+
 │
 ├── .env                       # Environment variables
 ├── Dockerfile                 # Kafka consumer Docker image definition
@@ -36,6 +38,7 @@
 │   ├── storage/               # Save dataframes to Iceberg or other storage
 │   └── utils/                 # Utility functions and configuration loaders
 
+
 # ⚙️ Project Setup
 
 Use **Docker Compose** to start all services:
@@ -51,6 +54,7 @@ docker compose --env-file .env.dev up -d
 > 
 > 1. **Image size is not optimized**: The container images are large and may consume unnecessary disk space or memory.
 > 2. **Potential security risk**: To enable cross-container operations (especially for Airflow), the Docker socket (`/var/run/docker.sock`) is mounted as a volume. This may pose **security risks** by exposing Docker daemon access from inside the container.
+
 
 ### 🧱 Docker Services Overview
 
