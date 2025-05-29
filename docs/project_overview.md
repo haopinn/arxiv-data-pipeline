@@ -13,7 +13,7 @@ These two aspects are covered in detail in the accompanying technical stack docu
 Key decisions such as:
 
 - Using **Airflow** for orchestrating time-sensitive API crawling tasks with retry logic.
-- Adopting **Kafka** to distribute compute-heavy tasks such as parsing and enriching arXiv metadata.
+- Adopting **Kafka** to distribute compute-heavy tasks such as parsing and enriching **arXiv** metadata.
 - Storing data in **Apache Iceberg** (on **MinIO**) to support scalability and future querying via distributed computing engines like Spark.
 
 This architecture is designed to support future analytical workflows, such as machine learning pipelines, exploratory queries by analysts, and visualizations.
@@ -22,10 +22,10 @@ This architecture is designed to support future analytical workflows, such as ma
 
 ### 3. 🧩 Challenges and Irregularities When Handling arXiv Metadata
 
-Several challenges emerged while processing arXiv metadata:
+Several challenges emerged while processing **arXiv** metadata:
 
 - **Unstable API connections**: I frequently encountered `Connection closed by peer` errors when querying the **arXiv** API. This was mitigated by implementing a retry mechanism using persistent **HTTP** sessions (see `src/utils/http_client.py`), and by instrumenting **Prometheus** metrics to track failure rates and response times (`src/monitoring/fetcher_monitor.py`).
-- **Pagination and completeness**: It was initially difficult to determine whether all data had been retrieved. By studying the arXiv API documentation, I discovered that sorting by `publish_date` (an always-increasing field) in combination with `start_idx` provided a reliable iteration strategy.
+- **Pagination and completeness**: It was initially difficult to determine whether all data had been retrieved. By studying the **arXiv** API documentation, I discovered that sorting by `publish_date` (an always-increasing field) in combination with `start_idx` provided a reliable iteration strategy.
 - **Schema inconsistency**: **arXiv** and especially **CrossRef** responses often contain irregular or inconsistent fields. For instance, the **CrossRef** `published` date may be represented as a list of 1–3 integers, requiring assumptions and normalization during preprocessing. This highlights the **importance of establishing data lineage**, which is not yet implemented but is a priority for future development.
 - **Matching and enrichment issues**: Mapping **arXiv** entries to **CrossRef** metadata is error-prone due to differences in titles, abstracts, or post-publication edits. The **CrossRef** `score` field, used to assess match confidence, operates as a black box. In the future, I may need to establish heuristics or thresholds to tune its effectiveness.
 
@@ -40,7 +40,7 @@ Several challenges emerged while processing arXiv metadata:
 
 ### 5. 🔁 Fault Tolerance and Recovery Mechanisms
 
-- **Resilient task orchestration**: Airflow jobs benefit from built-in retry logic. Additionally, the metadata crawling strategy is **persisted in a PostgreSQL table**, ensuring that arXiv records can be exhaustively and reliably traversed.
+- **Resilient task orchestration**: Airflow jobs benefit from built-in retry logic. Additionally, the metadata crawling strategy is **persisted in a PostgreSQL table**, ensuring that **arXiv** records can be exhaustively and reliably traversed.
 - **Kafka dead-letter queue (DLQ)**: For downstream consumers (e.g., **CrossRef** metadata fetchers), if processing fails, messages are not silently dropped or endlessly retried. Instead, they are redirected to a **DLQ**, where failures can be **tracked and manually inspected**.
 
 ---
