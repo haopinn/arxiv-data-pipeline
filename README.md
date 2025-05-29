@@ -22,7 +22,7 @@
 ├── docker/                    # Container-specific setup and configs
 │   └── airflow/               # Airflow DAGs and runtime logic
 │       └── dags/              # DAG definition scripts
-│   └── prometheus/      # Configuration of Prometheus
+│   └── prometheus/            # Configuration of Prometheus
 │
 ├── src/                       # Core Python source code
 │   ├── client/                # Connectors for PostgreSQL, Kafka, Iceberg, etc.
@@ -56,7 +56,7 @@ docker compose --env-file .env.dev up -d
 > 2. **Potential security risk**: To enable cross-container operations (especially for Airflow), the Docker socket (`/var/run/docker.sock`) is mounted as a volume. This may pose **security risks** by exposing Docker daemon access from inside the container.
 
 
-### 🧱 Docker Services Overview
+# 🧱 Docker Services Overview
 
 | Service Name | Image / Component | Purpose / Role |
 | --- | --- | --- |
