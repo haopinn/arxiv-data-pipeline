@@ -1,6 +1,6 @@
 ## 📘 Project Overview & Technical Documentation
 
-This document provides a comprehensive overview of the system’s design decisions, challenges encountered, and proposed monitoring strategies for the metadata processing pipeline for arXiv and CrossRef.
+This document provides a comprehensive overview of the system’s design decisions, challenges encountered, and proposed monitoring strategies for the metadata processing pipeline for **arXiv** and **CrossRef**.
 
 ---
 
