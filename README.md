@@ -1,6 +1,6 @@
 # 🏗️Overview
 
-![flow_chart.png](https://github.com/haopinn/arxiv-data-pipeline/blob/main/flow_chart.png?raw=true))
+![flow_chart.png](https://github.com/haopinn/arxiv-data-pipeline/blob/main/flow_chart.png?raw=true)
 
 
 # 📂 Directory Structure
