@@ -11,7 +11,7 @@ from sqlalchemy import text
 from src.config import ARXIV_FETCHER_BATCH_SIZE
 from src.client.postgresql_client import arxiv_postgres_engine
 from src.monitoring.arxiv_monitor import ARXIV_API_REQUESTS_TOTAL, ARXIV_API_RESPONSE_LATENCY, ARXIV_FETCH_IN_PROGRESS
-from src.monitoring.base import fetcher_prometheus_monitor
+from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
 from src.utils.file_utils import ensure_dir_for_file
 from src.utils.http_client import build_http_session_with_retry
 

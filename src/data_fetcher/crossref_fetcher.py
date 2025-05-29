@@ -3,7 +3,7 @@ from typing import Optional
 import pandas as pd
 
 from src.config import CROSSREF_API_SCORE_THRSLD
-from src.monitoring.base import fetcher_prometheus_monitor
+from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
 from src.monitoring.crossref_monitor import CROSSREF_API_REQUESTS_TOTAL, CROSSREF_API_RESPONSE_LATENCY, CROSSREF_FETCH_IN_PROGRESS
 from src.schema.crossref_schema import CrossrefRawMetadata
 from src.utils.http_client import build_http_session_with_retry

@@ -1,12 +1,11 @@
 version: "3.8"
 
-# Airflow 通用配置
 x-airflow-common:
   &airflow-common
-  build:  # 加這段來 build 你剛剛的 Dockerfile
+  build: 
     context: .
     dockerfile: Dockerfile.airflow
-  image: airflow-custom:2.10.5  # 給它一個你喜歡的 tag  environment:
+  image: airflow-custom:2.10.5
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -41,11 +40,7 @@ x-airflow-common:
     - data_platform
 
 services:
-  # ===================
-  # 基礎設施服務
-  # ===================
-  
-  # 統一的 PostgreSQL 服務 (用於 Airflow 和 Conduktor)
+  # postgres
   postgres:
     image: postgres:13
     container_name: postgres
@@ -67,7 +62,7 @@ services:
     networks:
       - data_platform
 
-  # Redis 服務
+  # redis
   redis:
     image: redis:7.2-bookworm
     container_name: redis
@@ -83,10 +78,7 @@ services:
     networks:
       - data_platform
 
-  # ===================
-  # Apache Kafka 生態系統
-  # ===================
-  
+  # kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:7.8.0
     hostname: zookeeper
@@ -200,7 +192,7 @@ services:
     command: ['poetry', 'run', 'python', '/app/src/client/kafka_consumer_client.py']
     networks:
       - data_platform
-    restart: unless-stopped  # 更好的重啟策略
+    restart: unless-stopped
 
   kafka-consumer2:
     build: .
@@ -222,12 +214,9 @@ services:
     command: ['poetry', 'run', 'python', '/app/src/client/kafka_consumer_client.py']
     networks:
       - data_platform
-    restart: unless-stopped  # 更好的重啟策略
+    restart: unless-stopped
 
-  # ===================
-  # Apache Spark + Iceberg
-  # ===================
-  
+  # spark + iceberg + minio
   minio:
     image: minio/minio
     container_name: minio
@@ -280,7 +269,7 @@ services:
       - AWS_REGION=us-east-1
     ports:
       - "8888:8888"
-      - "4041:4040"  # Spark UI 端口調整避免衝突
+      - "4041:4040"
 
   minio-client:
     depends_on:
@@ -305,16 +294,13 @@ services:
       tail -f /dev/null
       "
 
-  # ===================
-  # Apache Airflow
-  # ===================
-  
+  # airflow
   airflow-webserver:
     <<: *airflow-common
     command: webserver
     container_name: airflow-webserver
     ports:
-      - "8180:8080"  # 端口調整避免與 Spark UI 衝突
+      - "8180:8080"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
@@ -443,11 +429,7 @@ services:
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
 
-  # ===================
-  # 監控和管理工具 (可選)
-  # ===================
-  
-  # Conduktor (Kafka 管理工具) - 需要單獨的 conduktor.yml 文件
+  # Kafka Conduktor
   conduktor-console:
     image: conduktor/console:latest
     container_name: conduktor-console
@@ -460,13 +442,13 @@ services:
       - postgres
       - kafka
     ports:
-      - "8080:8080"  # Conduktor Web UI
+      - "8080:8080"
     networks:
       - data_platform
     profiles:
       - monitoring
 
-  # Flower (Airflow 任務監控) - 可選
+  # Airflow Flower
   flower:
     <<: *airflow-common
     command: celery flower
@@ -487,7 +469,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  # KSQLDB (可選 - 用於流處理)
+  # KSQLDB
   ksqldb-server:
     image: confluentinc/cp-ksqldb-server:7.8.0
     hostname: ksqldb-server
@@ -505,12 +487,12 @@ services:
     profiles:
       - streaming
 
-  # to monitor metrics of airflow
+  # statsd -- to monitor metrics of airflow
   statsd-exporter:
     image: prom/statsd-exporter
     container_name: statsd-exporter
     ports:
-      - "9192:9192"   # Prometheus metrics endpoint
+      - "9192:9192"
       - "8125:8125/udp"  # StatsD port (default UDP)
     command: [
       "--statsd.listen-udp=:8125",
@@ -525,7 +507,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./src/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./docker/prometheus_data:/prometheus
     restart: always
 
