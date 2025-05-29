@@ -1,0 +1,9 @@
+.venv/
+.vscode/
+docker/minio/*
+docker/airflow/logs/*
+docker/postgresql/*
+archived/
+gx/
+tmp_xml/
+*.pyc

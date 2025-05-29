@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  - job_name: 'airflow-statsd-exporter'
+    static_configs:
+      - targets: ['statsd-exporter:9192']
+
+  - job_name: 'arxiv-data-fetchers'
+    static_configs:
+      - targets: ['localhost:8012']
+
+  # - job_name: 'kafka' # not implemented yet.
+  #   static_configs:
+  #     - targets: ['kafka-exporter:9308']
+
+  # - job_name: 'spark' # not implemented yet.
+  #   static_configs:
+  #     - targets: ['spark-master:8080', 'spark-worker:8081']

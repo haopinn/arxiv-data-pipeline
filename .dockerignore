@@ -1,0 +1,4 @@
+.venv/
+docker/
+tmp_xml/
+unexcepted_result/
