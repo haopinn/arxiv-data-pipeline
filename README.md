@@ -4,9 +4,8 @@
 
 
 # 📂 Directory Structure
-
+```docker
 .
-
 │
 ├── .env                       # Environment variables
 ├── Dockerfile                 # Kafka consumer Docker image definition
@@ -18,7 +17,7 @@
 ├── poetry.toml                # Poetry tool settings
 ├── pyproject.toml             # Project and dependency definition
 │
-├── [README.md](http://readme.md/)                  # Project documentation `(this file)`
+├── README.md                  # Project documentation (this file)
 │
 ├── docker/                    # Container-specific setup and configs
 │   └── airflow/               # Airflow DAGs and runtime logic
@@ -37,6 +36,7 @@
 │   ├── script/                # Initialization/demo scripts (e.g., create tables)
 │   ├── storage/               # Save dataframes to Iceberg or other storage
 │   └── utils/                 # Utility functions and configuration loaders
+```
 
 
 # ⚙️ Project Setup
