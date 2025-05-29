@@ -116,7 +116,7 @@ For more complex validations involving DataFrames derived from processed data, r
 
 ### 8. **Docker / Docker Compose**
 
-    **Docker Compose** is used to containerize all services for reproducible demo deployment. While not yet critical for production, this setup allows modular tool development and will serve as a future base for scaling via **Kubernetes**. Currently supports development and testing; future-proofing for scalable deployment.
+**Docker Compose** is used to containerize all services for reproducible demo deployment. While not yet critical for production, this setup allows modular tool development and will serve as a future base for scaling via **Kubernetes**. Currently supports development and testing; future-proofing for scalable deployment.
 
 **Stack Integration & Interoperability**
 
