@@ -2,7 +2,7 @@
 
 ### **1. Airflow**
 
-  With Apache Airflow to orchestrate workflows involving **arXiv** APIs with strict rate limits (e.g., 1 request every 3 seconds). **Airflow** provides built-in retry mechanisms, scheduling, and task modularity, helping us avoid API blocking and maintain a reliable ingestion process.
+With Apache Airflow to orchestrate workflows involving **arXiv** APIs with strict rate limits (e.g., 1 request every 3 seconds). **Airflow** provides built-in retry mechanisms, scheduling, and task modularity, helping us avoid API blocking and maintain a reliable ingestion process.
 
 **Stack Integration & Interoperability**
 
@@ -15,7 +15,7 @@
 
 ### 2. **Kafka**
 
-  For APIs with higher throughput limits (e.g., **Crossref**: 50 queries/sec), I adopt **Apache Kafka** to stream and decouple heavy metadata extraction tasks like parsing authors and references from **Crossref** data. Since these are more compute-intensive than IO-bound, **Kafka** serves as a scalable backbone for ingestion and transformation.
+For APIs with higher throughput limits (e.g., **Crossref**: 50 queries/sec), I adopt **Apache Kafka** to stream and decouple heavy metadata extraction tasks like parsing authors and references from **Crossref** data. Since these are more compute-intensive than IO-bound, **Kafka** serves as a scalable backbone for ingestion and transformation.
 
 **Stack Integration & Interoperability**
 
@@ -32,7 +32,7 @@
 
 ### 3. **Apache Iceberg + MinIO (S3-compatible)**
 
-  To handle large volumes of unstructured raw data, I adopt **Apache Iceberg** as our **NoSQL**, data lakehouse storage format on top of **MinIO** (S3-compatible). It supports schema evolution, time travel, and **Spark SQL** queries — ideal for scalable and future-proof data analytics pipelines.
+To handle large volumes of unstructured raw data, I adopt **Apache Iceberg** as our **NoSQL**, data lakehouse storage format on top of **MinIO** (S3-compatible). It supports schema evolution, time travel, and **Spark SQL** queries — ideal for scalable and future-proof data analytics pipelines.
 
 **Stack Integration & Interoperability**
 
@@ -50,7 +50,7 @@
 
 ### 4. **Apache Spark** (Planned)
 
-  Although not yet fully implemented, **Apache Spark** has been installed in the environment to support distributed querying from Iceberg tables, and for building batch ETL jobs to downstream systems (e.g., **AWS Lambda**, **OpenSearch**).
+Although not yet fully implemented, **Apache Spark** has been installed in the environment to support distributed querying from Iceberg tables, and for building batch ETL jobs to downstream systems (e.g., **AWS Lambda**, **OpenSearch**).
 
 **Stack Integration & Interoperability**
 
@@ -68,7 +68,7 @@
 
 ### 5. **Pydantic**
 
-    I use **Pydantic** models to validate structured incoming data. It is especially effective when dealing with malformed or dirty records from external APIs. The `model_validation()` method helps eliminate invalid data early in the pipeline.
+I use **Pydantic** models to validate structured incoming data. It is especially effective when dealing with malformed or dirty records from external APIs. The `model_validation()` method helps eliminate invalid data early in the pipeline.
 
 **Stack Integration & Interoperability**
 
@@ -81,7 +81,7 @@
 
 ### 6. **Great Expectations (GX)**
 
-     For more complex validations involving DataFrames derived from processed data, regex rules (e.g., DOI format), or cross-field logic (e.g., journal page ranges), **Great Expectations** is more powerful than **Pydantic**. It also generates human-readable, visual reports.
+For more complex validations involving DataFrames derived from processed data, regex rules (e.g., DOI format), or cross-field logic (e.g., journal page ranges), **Great Expectations** is more powerful than **Pydantic**. It also generates human-readable, visual reports.
 
 **Stack Integration & Interoperability**
 
@@ -98,9 +98,9 @@
 
 ### 7. **Prometheus + Grafana**
 
-    **Prometheus** is integrated to collect and track real-time system metrics via custom exporters or built-in service metrics. It helps monitor **ETL** success rates, API request latency, and failures across different pipeline stages. These metrics form the foundation for understanding system behaviors and detecting anomalies.
+**Prometheus** is integrated to collect and track real-time system metrics via custom exporters or built-in service metrics. It helps monitor **ETL** success rates, API request latency, and failures across different pipeline stages. These metrics form the foundation for understanding system behaviors and detecting anomalies.
 
-    **Grafana**, though not yet fully implemented, is installed to visualize **Prometheus**-collected metrics and set up alert rules (e.g., via **Slack** or email). Together, they form a scalable and extensible observability stack to support real-time monitoring, alerting, and health diagnostics of data pipelines.
+**Grafana**, though not yet fully implemented, is installed to visualize **Prometheus**-collected metrics and set up alert rules (e.g., via **Slack** or email). Together, they form a scalable and extensible observability stack to support real-time monitoring, alerting, and health diagnostics of data pipelines.
 
 **Stack Integration & Interoperability**
 
