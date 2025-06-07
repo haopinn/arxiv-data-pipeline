@@ -39,6 +39,19 @@ x-airflow-common:
   networks:
     - data_platform
 
+x-kafka-consumer-common:
+  &kafka-consumer-common
+  build: .
+  depends_on:
+    - kafka
+  volumes:
+    - ./src/:/app/src/
+    - ./docker/:/app/docker/
+  command: ['python', '/app/src/client/kafka_consumer_client.py']
+  networks:
+    - data_platform
+  restart: unless-stopped
+
 services:
   # postgres
   postgres:
@@ -178,48 +191,26 @@ services:
       - data_platform
 
   kafka-consumer1:
-    build: .
-    depends_on:
-      - kafka
+    <<: *kafka-consumer-common
     ports:
       - "9101:9101"
     environment:
       BOOTSTRAP_SERVERS: 'kafka:19092'
-      PATH: '/app/.venv/bin:$PATH'
-      PYTHONUNBUFFERED: '1'
-      PYTHONPATH: '/app/'
+      PYTHON_CONFIG_SECTION_NAME: ${PYTHON_CONFIG_SECTION_NAME}
+      KAFKA_GROUP_ID: 'crossref-ingest-group'
       WORKER_ID: 'worker_1'
       PROM_PORT: '9101'
-      KAFKA_GROUP_ID: 'crossref-ingest-group'
-    volumes:
-      - ./src/:/app/src/
-      - ./docker/:/app/docker/
-    command: ['poetry', 'run', 'python', '/app/src/client/kafka_consumer_client.py']
-    networks:
-      - data_platform
-    restart: unless-stopped
 
   kafka-consumer2:
-    build: .
-    depends_on:
-      - kafka
+    <<: *kafka-consumer-common
     ports:
       - "9102:9102"
     environment:
       BOOTSTRAP_SERVERS: 'kafka:19092'
-      PATH: '/app/.venv/bin:$PATH'
-      PYTHONUNBUFFERED: '1'
-      PYTHONPATH: '/app/'
+      PYTHON_CONFIG_SECTION_NAME: ${PYTHON_CONFIG_SECTION_NAME}
+      KAFKA_GROUP_ID: 'crossref-ingest-group'
       WORKER_ID: 'worker_2'
       PROM_PORT: '9102'
-      KAFKA_GROUP_ID: 'crossref-ingest-group'
-    volumes:
-      - ./src/:/app/src/
-      - ./docker/:/app/docker/
-    command: ['poetry', 'run', 'python', '/app/src/client/kafka_consumer_client.py']
-    networks:
-      - data_platform
-    restart: unless-stopped
 
   # spark + iceberg + minio
   minio:
