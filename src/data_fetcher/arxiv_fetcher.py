@@ -1,5 +1,4 @@
 import uuid
-import xml
 from io import BytesIO
 from typing import Dict, Optional, Union
 import xml.etree.ElementTree as ET
@@ -9,7 +8,7 @@ import requests
 from sqlalchemy import text
 
 from src.config import ARXIV_FETCHER_BATCH_SIZE
-from src.client.postgresql_client import arxiv_postgres_engine
+from src.client.postgresql_client import arxiv_postgres_session
 from src.monitoring.arxiv_monitor import ARXIV_API_REQUESTS_TOTAL, ARXIV_API_RESPONSE_LATENCY, ARXIV_FETCH_IN_PROGRESS
 from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
 from src.utils.file_utils import ensure_dir_for_file
@@ -23,8 +22,8 @@ class ArxivTaskManager:
         query = '''
         SELECT
             id as task_id,
-            cast(start_date as TEXT),
-            cast(end_date as TEXT),
+            cast(start_date as TEXT) as start_date,
+            cast(end_date as TEXT) as end_date,
             start_idx 
         FROM 
             arxiv_fetch_task
@@ -32,10 +31,12 @@ class ArxivTaskManager:
             not is_finished 
         limit 1 
         '''
-        arxiv_fetch_task_raw = pd.read_sql(query, con=arxiv_postgres_engine)
+        with arxiv_postgres_session() as session:
+            query_result = session.execute(text(query)).fetchall()
+        arxiv_fetch_task_raw = pd.DataFrame(data=query_result)
         if not arxiv_fetch_task_raw.empty:
             self.task_id = int(arxiv_fetch_task_raw['task_id'].iloc[0])
-            return arxiv_fetch_task_raw.iloc[0].to_dict()
+            return arxiv_fetch_task_raw[['start_date', 'end_date', 'start_idx']].iloc[0].to_dict()
         else:
             return {}
     
@@ -48,15 +49,13 @@ class ArxivTaskManager:
         WHERE 
             id = :task_id
         '''
-
-        with arxiv_postgres_engine.connect() as conn:
+        with arxiv_postgres_session() as session:
             try:
-                conn.execute(text(query), parameters={"task_id": self.task_id})
-                conn.commit()
+                session.execute(text(query), {"task_id": self.task_id})
+                session.commit()
             except Exception as e:
                 print(f"ERROR while updating task status: {e}")
-                conn.rollback()
-
+                session.rollback()
 
 class ArxivMetadataFetcher:
     XML_FOLDER = './tmp_xml/'
@@ -88,13 +87,13 @@ class ArxivMetadataFetcher:
         api_counter=ARXIV_API_REQUESTS_TOTAL,
         latency_histogram=ARXIV_API_RESPONSE_LATENCY,
         in_progress_gauge=ARXIV_FETCH_IN_PROGRESS
-    ) 
-    def fetch_arxiv_metadata_api(self, start_date: str, end_date: str, start_idx: int, fetch_batch_size: int) -> xml.etree.ElementTree.ElementTree:
+    )
+    def fetch_arxiv_metadata_api(self, start_date: str, end_date: str, start_idx: int, fetch_batch_size: int) -> ET:
         query = self.create_api_url(start_date, end_date, start_idx, fetch_batch_size) 
         response = self.http.get(query)
         return ET.parse(BytesIO(response.content))
     
-    def save_arxiv_metadata(self, tree: xml.etree.ElementTree.ElementTree) -> str:
+    def save_arxiv_metadata(self, tree: ET.ElementTree) -> str:
         # could be changed to other sotrage system like S3 ...
         tmp_xml_filepath = self.generate_tmp_xml_filepath()
         ensure_dir_for_file(tmp_xml_filepath)
