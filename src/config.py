@@ -1,10 +1,12 @@
 import configparser
+import os
 from ast import literal_eval
 
 # Set the current environment
 config = configparser.RawConfigParser()
 config.read('./src/config.ini')
-config = config['DEFAULT']
+PYTHON_CONFIG_SECTION_NAME = os.environ['PYTHON_CONFIG_SECTION_NAME']
+config = config[PYTHON_CONFIG_SECTION_NAME]
 
 # initialize specific variables
 # --- Data Fetching ----
@@ -21,7 +23,7 @@ ICEBERG_ARXIV_NS_NAME=config['ICEBERG_ARXIV_NS_NAME']
 ICEBERG_CROSSREF_AUTHOR_TBL_NAME = config['ICEBERG_CROSSREF_AUTHOR_TBL_NAME']
 ICEBERG_CROSSREF_METADATA_TBL_NAME = config['ICEBERG_CROSSREF_METADATA_TBL_NAME']
 ICEBERG_CROSSREF_REFERENCE_TBL_NAME = config['ICEBERG_CROSSREF_REFERENCE_TBL_NAME']
-ICEBERG_REST_CATALOG_ENDPOINT = config['REST_CATALOG_ENDPOINT']
+ICEBERG_REST_CATALOG_ENDPOINT = config['ICEBERG_REST_CATALOG_ENDPOINT']
 
 # --- MinIO ---
 S3_ENDPOINT = config['S3_ENDPOINT']
@@ -36,4 +38,4 @@ KAFKA_WORKER_PARTITIONS=int(config['KAFKA_WORKER_PARTITIONS'])
 ARXIV_POSTGRES_URL=config['ARXIV_POSTGRES_URL']
 
 # --- GX ---
-GX_DIR = config('GX_DIR')
+GX_DIR = config['GX_DIR']
