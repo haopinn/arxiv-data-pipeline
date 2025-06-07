@@ -4,8 +4,8 @@ from datetime import datetime
 
 with DAG(
     dag_id="arxiv_data_fetcher",
-    start_date=datetime(2023, 1, 1),
-    schedule_interval='* * * * *',
+    start_date=datetime(2025, 6, 9),
+    schedule_interval=None,
     catchup=False,
 ) as dag:
     arvix_data_fetcher = DockerOperator(
@@ -17,9 +17,8 @@ with DAG(
         command="python /app/src/pipeline/arxiv_pipeline.py",  # 視 image 而定
         docker_url="unix://var/run/docker.sock",
         environment={
-            "PATH": '/app/.venv/bin:$PATH',
-            "PYTHONUNBUFFERED": '1',
-            "PYTHONPATH": '/app/'
+            "PYTHON_CONFIG_SECTION_NAME": 'demo'
         },
-        network_mode="bridge",
+        network_mode="arxiv-data-pipeline_data_platform", # full network name (inc. docker image name)
+        mount_tmp_dir=False,
     )
