@@ -128,7 +128,7 @@ services:
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=7071:/opt/jmx_exporter/kafka-metrics.yml" # Configure JMX exporter as Java agent
     volumes:
       - ./kafka/jmx_prometheus_javaagent-0.19.0.jar:/opt/jmx_exporter/jmx_prometheus_javaagent.jar # JMX exporter JAR
-      - ./kafka/kafka-stack-docker-compose/jmx-exporter.yml:/opt/jmx_exporter/kafka-metrics.yml # JMX exporter config
+      - ./kafka/jmx-exporter.yml:/opt/jmx_exporter/kafka-metrics.yml # JMX exporter config
     depends_on:
       - zookeeper
     networks:
