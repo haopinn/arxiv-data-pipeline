@@ -192,6 +192,8 @@ services:
 
   kafka-consumer1:
     <<: *kafka-consumer-common
+    networks:
+      - data_platform
     ports:
       - "9101:9101"
     environment:
@@ -506,6 +508,9 @@ services:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./docker/prometheus_data:/prometheus
     restart: always
+    networks:
+        - data_platform
+
 
   grafana:
     image: grafana/grafana:latest
@@ -520,6 +525,9 @@ services:
     depends_on:
       - prometheus
     restart: always
+    networks:
+      - data_platform
+
 
 volumes:
   conduktor_data:
