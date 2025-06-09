@@ -1,7 +1,6 @@
 import pandas as pd
-from prometheus_client import start_http_server
 
-from src.config import PROMETHEUS_PORT, ICEBERG_ARXIV_METADATA_TBL_NAME
+from src.config import ICEBERG_ARXIV_METADATA_TBL_NAME
 from src.data_fetcher.arxiv_fetcher import ArxivTaskManager, ArxivMetadataFetcher
 from src.data_processor.arxiv_parser import ArxivRawMetadataParser, ArxivMetadataTransformer
 from src.data_validator.arxiv_validator import validate_arxiv_metadata
@@ -11,7 +10,6 @@ from src.storage.iceberg_storage import DataModelManager
 class ArxivDataPipeline:
     @staticmethod
     def ingest():
-        start_http_server(PROMETHEUS_PORT)
         arxiv_task_manager = ArxivTaskManager()
         arxiv_task = arxiv_task_manager.get_a_task()
 
@@ -33,10 +31,12 @@ class ArxivDataPipeline:
 
         if success:
             DataModelManager.to_iceberg(arxiv_metadata_df, ICEBERG_ARXIV_METADATA_TBL_NAME)
-            arxiv_task_manager.mark_task_status()
 
             arxiv_crossref_message_handler = ArxivCrossrefMessageHandler()
             _ = [arxiv_crossref_message_handler.create_and_send(arxiv_metadata) for arxiv_metadata in arxiv_metadatas]
+
+            arxiv_task_manager.mark_task_status()
+
 
 if __name__ == "__main__":
     ArxivDataPipeline.ingest()

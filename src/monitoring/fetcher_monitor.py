@@ -1,10 +1,18 @@
+import time
 from functools import wraps
-from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import Counter, Histogram, Gauge, REGISTRY
+from prometheus_client.registry import CollectorRegistry
+
+from src.client.prometheus_gateway_client import push_to_prometheus_gateway
 
 def fetcher_prometheus_monitor(
+        job_name: str,
         api_counter: Counter,
         latency_histogram: Histogram,
-        in_progress_gauge: Gauge
+        in_progress_gauge: Gauge,
+        instance_name: str = str(time.time()),
+        kafka_consumer_id: str = '',
+        registry: CollectorRegistry = REGISTRY,
     ):
     def decorator(func):
         @wraps(func)
@@ -20,5 +28,12 @@ def fetcher_prometheus_monitor(
                     raise
                 finally:
                     in_progress_gauge.dec()
+                    # Push metrics to Prometheus Pushgateway
+                    push_to_prometheus_gateway(
+                        job_name=job_name,
+                        instance_name=instance_name,
+                        registry=registry,
+                        kafka_consumer_id=kafka_consumer_id
+                    )
         return wrapper
     return decorator

@@ -511,6 +511,13 @@ services:
     networks:
         - data_platform
 
+  pushgateway: # Prometheus Pushgateway Server
+    image: prom/pushgateway:v1.8.0
+    container_name: pushgateway
+    ports:
+      - "9091:9091"
+    networks:
+      - data_platform
 
   grafana:
     image: grafana/grafana:latest

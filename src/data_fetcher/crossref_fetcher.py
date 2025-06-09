@@ -2,18 +2,22 @@ from typing import Optional
 
 import pandas as pd
 
-from src.config import CROSSREF_API_SCORE_THRSLD
+from src.config import CROSSREF_API_SCORE_THRSLD, WORKER_ID
 from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
-from src.monitoring.crossref_monitor import CROSSREF_API_REQUESTS_TOTAL, CROSSREF_API_RESPONSE_LATENCY, CROSSREF_FETCH_IN_PROGRESS
+from src.monitoring.crossref_monitor import CrossrefFetcherMetricsCollector
 from src.schema.crossref_schema import CrossrefRawMetadata
 from src.utils.http_client import build_http_session_with_retry
+
+crossref_fetcher_metrics = CrossrefFetcherMetricsCollector()
 
 class CrossrefDataFetcher:
     @staticmethod
     @fetcher_prometheus_monitor(
-        api_counter=CROSSREF_API_REQUESTS_TOTAL,
-        latency_histogram=CROSSREF_API_RESPONSE_LATENCY,
-        in_progress_gauge=CROSSREF_FETCH_IN_PROGRESS
+        job_name='crossref_data_fetcher',
+        kafka_consumer_id=WORKER_ID,
+        api_counter=crossref_fetcher_metrics.request_count,
+        latency_histogram=crossref_fetcher_metrics.latency,
+        in_progress_gauge=crossref_fetcher_metrics.in_progress
     )
     def search_crossref(title: str, author: str, start_date: str):
         start_date = pd.to_datetime(start_date).strftime('%Y-%m-%d')

@@ -17,6 +17,7 @@ from src.schema.crossref_schema import (
 from src.storage.iceberg_storage import DataModelManager
 
 class CrossrefDataPipeline:
+    @staticmethod
     def ingest(arxiv_doi: str, arxiv_version: int, title: str, author: str, start_date: str):
         crossref_data_fetcher = CrossrefDataFetcher()
         crossref_match_result = crossref_data_fetcher.find_fittest_crossref_result(

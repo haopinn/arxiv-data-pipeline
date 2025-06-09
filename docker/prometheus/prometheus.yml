@@ -16,7 +16,7 @@ scrape_configs:
 
   - job_name: 'arxiv-data-fetchers'
     static_configs:
-      - targets: ['prometheus:8012']
+      - targets: ['pushgateway:9091']
 
   # - job_name: 'kafka' # not implemented yet.
   #   static_configs:

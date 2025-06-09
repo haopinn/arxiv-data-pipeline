@@ -9,10 +9,12 @@ from sqlalchemy import text
 
 from src.config import ARXIV_FETCHER_BATCH_SIZE
 from src.client.postgresql_client import arxiv_postgres_session
-from src.monitoring.arxiv_monitor import ARXIV_API_REQUESTS_TOTAL, ARXIV_API_RESPONSE_LATENCY, ARXIV_FETCH_IN_PROGRESS
+from src.monitoring.arxiv_monitor import ArxivFetcherMetricsCollector
 from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
 from src.utils.file_utils import ensure_dir_for_file
 from src.utils.http_client import build_http_session_with_retry
+
+arxiv_fetcher_metrics = ArxivFetcherMetricsCollector()
 
 class ArxivTaskManager:
     def __init__(self, task_id: Optional[int] = None):
@@ -82,11 +84,12 @@ class ArxivMetadataFetcher:
             f"sortBy=submittedDate&"
             f"sortOrder=ascending"
         )
-    
+
     @fetcher_prometheus_monitor(
-        api_counter=ARXIV_API_REQUESTS_TOTAL,
-        latency_histogram=ARXIV_API_RESPONSE_LATENCY,
-        in_progress_gauge=ARXIV_FETCH_IN_PROGRESS
+        job_name='arxiv_data_fetcher',
+        api_counter=arxiv_fetcher_metrics.request_count,
+        latency_histogram=arxiv_fetcher_metrics.latency,
+        in_progress_gauge=arxiv_fetcher_metrics.in_progress
     )
     def fetch_arxiv_metadata_api(self, start_date: str, end_date: str, start_idx: int, fetch_batch_size: int) -> ET:
         query = self.create_api_url(start_date, end_date, start_idx, fetch_batch_size) 
