@@ -232,14 +232,16 @@ services:
       - "9001:9001"
       - "9000:9000"
     command: ["server", "/data", "--console-address", ":9001"]
-
+  
   iceberg-rest:
-    image: apache/iceberg-rest-fixture
+    image: tabulario/iceberg-rest:0.8.0
     container_name: iceberg-rest
     networks:
       - data_platform
     ports:
       - "8181:8181"
+    volumes:
+      - ./docker/iceberg-rest/warehouse:/tmp/warehouse
     environment:
       - AWS_ACCESS_KEY_ID=admin
       - AWS_SECRET_ACCESS_KEY=password
@@ -247,8 +249,15 @@ services:
       - CATALOG_WAREHOUSE=s3://warehouse/
       - CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
       - CATALOG_S3_ENDPOINT=http://minio:9000
+      - CATALOG_S3_PATH_STYLE_ACCESS=true
+      # for data persistence
+      - CATALOG_CATALOG__IMPL=org.apache.iceberg.jdbc.JdbcCatalog
+      - CATALOG_URI=jdbc:postgresql://postgres:5432/iceberg_catalog
+      - CATALOG_JDBC_USER=airflow
+      - CATALOG_JDBC_PASSWORD=airflow
     depends_on:
       - minio
+      - postgres
 
   spark-iceberg:
     image: tabulario/spark-iceberg
@@ -261,6 +270,7 @@ services:
     volumes:
       - ./docker/spark-iceberg/warehouse:/home/iceberg/warehouse
       - ./docker/spark-iceberg/notebooks:/home/iceberg/notebooks/notebooks
+      - ./docker/spark-iceberg/conf:/opt/spark/conf
     environment:
       - AWS_ACCESS_KEY_ID=admin
       - AWS_SECRET_ACCESS_KEY=password
@@ -282,13 +292,24 @@ services:
       - AWS_REGION=us-east-1
     entrypoint: >
       /bin/sh -c "
+      echo 'Waiting for MinIO to start...';
       until /usr/bin/mc alias set minio http://minio:9000 admin password; do
-        echo '...waiting...'
-        sleep 1
+        echo 'Connecting to MinIO...';
+        sleep 2;
       done;
-      /usr/bin/mc rb --force minio/warehouse;
-      /usr/bin/mc mb minio/warehouse;
-      /usr/bin/mc anonymous set public minio/warehouse;
+      echo 'Connected to MinIO successfully';
+      
+      # Check if the bucket exists; create it if it does not
+      if ! /usr/bin/mc ls minio/warehouse >/dev/null 2>&1; then
+        echo 'Creating warehouse bucket...';
+        /usr/bin/mc mb minio/warehouse;
+        /usr/bin/mc anonymous set public minio/warehouse;
+        echo 'warehouse bucket created successfully';
+      else
+        echo 'warehouse bucket already exists, skipping creation';
+      fi;
+      
+      echo 'MinIO initialization complete';
       tail -f /dev/null
       "
 
