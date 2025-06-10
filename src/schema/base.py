@@ -1,5 +1,5 @@
 from typing import get_args, get_origin, Optional, List
-from pydantic import BaseModel
+from src.schema_validator.base import MonitoredBaseModel
 
 import pandas as pd
 from pyiceberg.schema import Schema
@@ -10,7 +10,7 @@ from pyiceberg.types import (
     NestedField
 )
 
-class DataModelMixin(BaseModel):
+class DataModelMixin(MonitoredBaseModel):
     def to_dataframe(self) -> pd.DataFrame:
         return pd.DataFrame(data=[self.model_dump()])
 

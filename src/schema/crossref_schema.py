@@ -3,10 +3,10 @@ from pydantic import BaseModel, Field
 
 from src.schema.base import DataModelMixin
 
-class AuthorAffiliation(DataModelMixin):
+class AuthorAffiliation(BaseModel):
     name: str = ''
 
-class CrossrefRawAuthor(DataModelMixin):
+class CrossrefRawAuthor(BaseModel):
     given: str = ''
     family: str = ''
     sequence: str = ''

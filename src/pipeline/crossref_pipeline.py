@@ -1,4 +1,7 @@
+import time
+
 import pandas as pd
+from prometheus_client import CollectorRegistry
 
 from src.config import (
     ICEBERG_CROSSREF_METADATA_TBL_NAME,
@@ -14,24 +17,33 @@ from src.data_processor.crossref_parser import (
 from src.schema.crossref_schema import (
     CrossrefRawMetadata
 )
+from src.schema_validator.metrics import MetricProvider
 from src.storage.iceberg_storage import DataModelManager
 
 class CrossrefDataPipeline:
     @staticmethod
     def ingest(arxiv_doi: str, arxiv_version: int, title: str, author: str, start_date: str):
-        crossref_data_fetcher = CrossrefDataFetcher()
+        unix_timestamp = str(time.time())
+        registry = CollectorRegistry()
+        metrics_provider = MetricProvider(
+            job_name='crossref_parser',
+            registry=registry,
+            instance_name=unix_timestamp
+        )
+
+        crossref_data_fetcher = CrossrefDataFetcher(metrics_provider=metrics_provider)
         crossref_match_result = crossref_data_fetcher.find_fittest_crossref_result(
             title=title,
             author=author,
             start_date=start_date
         )
-        
+
         raw_metadata = CrossrefRawMetadata.model_validate(crossref_match_result)
-        author_transformer = CrossrefAuthorTransformer()
-        reference_transformer = CrossrefReferenceTransformer()
+        author_transformer = CrossrefAuthorTransformer(metrics_provider=metrics_provider)
+        reference_transformer = CrossrefReferenceTransformer(metrics_provider=metrics_provider)
         metadata_transformer = CrossrefMetadataTransformer()
 
-        metadata = metadata_transformer.transform(arxiv_doi=arxiv_doi, arxiv_version=arxiv_version, crossref_raw_metadata=raw_metadata)
+        metadata = metadata_transformer.transform(arxiv_doi=arxiv_doi, arxiv_version=arxiv_version, crossref_raw_metadata=raw_metadata, metrics_provider=metrics_provider)
         authors = author_transformer.transform_from_list(doi=raw_metadata.doi, crossref_raw_author_list=raw_metadata.authors)
         references = reference_transformer.transform_from_list(doi=raw_metadata.doi, crossref_raw_reference_list=raw_metadata.references)
 
@@ -42,6 +54,8 @@ class CrossrefDataPipeline:
         DataModelManager.to_iceberg(metadata_df, ICEBERG_CROSSREF_METADATA_TBL_NAME)
         DataModelManager.to_iceberg(authors_df, ICEBERG_CROSSREF_AUTHOR_TBL_NAME)
         DataModelManager.to_iceberg(references_df, ICEBERG_CROSSREF_REFERENCE_TBL_NAME)
+
+        metrics_provider.push()
 
 if __name__ == "__main__":
     pass

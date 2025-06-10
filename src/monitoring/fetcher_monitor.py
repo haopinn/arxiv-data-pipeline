@@ -9,19 +9,23 @@ def fetcher_prometheus_monitor(
         job_name: str,
         api_counter: Counter,
         latency_histogram: Histogram,
+        response_size_histogram: Histogram,
         in_progress_gauge: Gauge,
-        instance_name: str = str(time.time()),
+        url_endpoint: str = '',
         kafka_consumer_id: str = '',
         registry: CollectorRegistry = REGISTRY,
     ):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            instance_name = kwargs.get("instance_name", str(time.time()))
             in_progress_gauge.inc()
             with latency_histogram.time():
                 try:
                     result = func(*args, **kwargs)
                     api_counter.labels(status='success').inc()
+                    if hasattr(result, 'content'):
+                        response_size_histogram.labels(endpoint=url_endpoint).observe(len(result.content))
                     return result
                 except Exception as e:
                     api_counter.labels(status='failure').inc()

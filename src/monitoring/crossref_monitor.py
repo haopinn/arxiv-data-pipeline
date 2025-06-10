@@ -40,4 +40,4 @@ class CrossrefFetcherMetricsCollector:
         self.request_count = self.build_request_counter(registry)
         self.latency = self.build_response_latency_histogram(registry)
         self.in_progress = self.build_fetch_in_progress_gauge(registry)
-        self.size = self.build_response_size_histogram(registry=registry)
+        self.response_size = self.build_response_size_histogram(registry=registry)

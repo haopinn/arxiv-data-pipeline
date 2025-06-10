@@ -14,6 +14,8 @@ from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
 from src.utils.file_utils import ensure_dir_for_file
 from src.utils.http_client import build_http_session_with_retry
 
+ARXIV_URL_ENDPOINT = 'https://export.arxiv.org/api/query'
+
 arxiv_fetcher_metrics = ArxivFetcherMetricsCollector()
 
 class ArxivTaskManager:
@@ -77,8 +79,8 @@ class ArxivMetadataFetcher:
         start_date = pd.to_datetime(start_date).strftime("%Y%m%d")
         end_date = pd.to_datetime(end_date).strftime("%Y%m%d")
         return (
-            f"https://export.arxiv.org/api/query?"
-            f"search_query=submittedDate:%5B{start_date}0000+TO+{end_date}2359%5D&"
+            f"{ARXIV_URL_ENDPOINT}"
+            f"?search_query=submittedDate:%5B{start_date}0000+TO+{end_date}2359%5D&"
             f"start={start_idx}&"
             f"max_results={fetch_batch_size}&"
             f"sortBy=submittedDate&"
@@ -87,15 +89,21 @@ class ArxivMetadataFetcher:
 
     @fetcher_prometheus_monitor(
         job_name='arxiv_data_fetcher',
+        url_endpoint=ARXIV_URL_ENDPOINT,
         api_counter=arxiv_fetcher_metrics.request_count,
         latency_histogram=arxiv_fetcher_metrics.latency,
+        response_size_histogram=arxiv_fetcher_metrics.response_size,
         in_progress_gauge=arxiv_fetcher_metrics.in_progress
     )
-    def fetch_arxiv_metadata_api(self, start_date: str, end_date: str, start_idx: int, fetch_batch_size: int) -> ET:
-        query = self.create_api_url(start_date, end_date, start_idx, fetch_batch_size) 
+    def fetch_arxiv_metadata_api(self, start_date: str, end_date: str, start_idx: int, fetch_batch_size: int, instance_name) -> requests.Response:
+        query = self.create_api_url(start_date, end_date, start_idx, fetch_batch_size)
         response = self.http.get(query)
+        return response
+
+    @staticmethod
+    def parse_arxiv_response_as_et(response: requests.Response) -> ET:
         return ET.parse(BytesIO(response.content))
-    
+
     def save_arxiv_metadata(self, tree: ET.ElementTree) -> str:
         # could be changed to other sotrage system like S3 ...
         tmp_xml_filepath = self.generate_tmp_xml_filepath()
@@ -104,8 +112,9 @@ class ArxivMetadataFetcher:
         print(f"XML is temporary saving to '{tmp_xml_filepath}' ...")
         tree.write(tmp_xml_filepath, encoding='utf-8', xml_declaration=True)
         return tmp_xml_filepath
-    
-    def fetch_and_save_arxiv_metadata(self, start_date: str, end_date: str, start_idx: int, fetch_batch_size: int = ARXIV_FETCHER_BATCH_SIZE) -> str:
-        arxiv_metdata_tree = self.fetch_arxiv_metadata_api(start_date=start_date, end_date=end_date, start_idx=start_idx, fetch_batch_size=fetch_batch_size)
-        tmp_xml_filepath = self.save_arxiv_metadata(arxiv_metdata_tree)
+
+    def fetch_and_save_arxiv_metadata(self, start_date: str, end_date: str, start_idx: int, instance_name: str = '', fetch_batch_size: int = ARXIV_FETCHER_BATCH_SIZE) -> str:
+        arxiv_api_response = self.fetch_arxiv_metadata_api(start_date=start_date, end_date=end_date, start_idx=start_idx, fetch_batch_size=fetch_batch_size, instance_name=instance_name)
+        arxiv_metadata_tree = self.parse_arxiv_response_as_et(arxiv_api_response)
+        tmp_xml_filepath = self.save_arxiv_metadata(arxiv_metadata_tree)
         return tmp_xml_filepath

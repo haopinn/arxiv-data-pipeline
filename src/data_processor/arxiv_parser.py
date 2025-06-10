@@ -4,13 +4,14 @@ from typing import List, Optional, Tuple
 import pandas as pd
 
 from src.schema.arxiv_schema import ArxivRawMetadata, ArxivMetadata
+from src.schema_validator.metrics import MetricProvider
 
 ARXIV_ENTRY_ELMT_TAG = "{http://www.w3.org/2005/Atom}entry"
 ARXIV_XML_NS = {'atom': 'http://www.w3.org/2005/Atom', 'arxiv': 'http://arxiv.org/schemas/atom'}
 
 class ArxivRawMetadataParser:
     @classmethod
-    def from_xml(cls, entry: ET.Element) -> ArxivRawMetadata:
+    def from_xml(cls, entry: ET.Element, metrics_provider: MetricProvider) -> ArxivRawMetadata:
         @staticmethod
         def get_text(el: ET.Element, tag: str) -> str:
             e = el.find(f'atom:{tag}', ARXIV_XML_NS)
@@ -28,6 +29,8 @@ class ArxivRawMetadataParser:
                 if link.attrib.get('title') == 'pdf':
                     return link.attrib['href']
             return ""
+        
+        counters = metrics_provider.get_counters() if metrics_provider else {}
 
         return ArxivRawMetadata(
             arxiv_url=get_text(entry, 'id'),
@@ -38,16 +41,25 @@ class ArxivRawMetadataParser:
             authors=get_authors(entry),
             pdf_url=get_pdf_link(entry),
             primary_category=entry.find('arxiv:primary_category', ARXIV_XML_NS).attrib.get('term', None) \
-            if entry.find('arxiv:primary_category', ARXIV_XML_NS) is not None else ""
+            if entry.find('arxiv:primary_category', ARXIV_XML_NS) is not None else "",
+            **counters
         )
-    
+
     @staticmethod
-    def from_xml_filepath(xml_filepath: str) -> List[ArxivRawMetadata]:
+    def from_xml_filepath(
+        xml_filepath: str,
+        metrics_provider: Optional[MetricProvider] = None
+    ) -> List[ArxivRawMetadata]:
+
         tree = ET.parse(xml_filepath)
         root = tree.getroot()
-        return [
-            ArxivRawMetadataParser.from_xml(rooti) for rooti in root if rooti.tag == ARXIV_ENTRY_ELMT_TAG
+
+        results = [
+            ArxivRawMetadataParser.from_xml(rooti, metrics_provider=metrics_provider)
+            for rooti in root if rooti.tag == ARXIV_ENTRY_ELMT_TAG
         ]
+
+        return results
 
 class ArxivMetadataTransformer:
     @staticmethod
@@ -59,9 +71,12 @@ class ArxivMetadataTransformer:
         return version, arxiv_doi
 
     @staticmethod
-    def transform(arxiv_raw_metadata: ArxivRawMetadata) -> ArxivMetadata:
+    def transform(arxiv_raw_metadata: ArxivRawMetadata, metrics_provider: MetricProvider) -> ArxivMetadata:
         version, arxiv_doi = ArxivMetadataTransformer.parse_arxiv_id(arxiv_url=arxiv_raw_metadata.arxiv_url)
         published_yyyy_mm = pd.to_datetime(arxiv_raw_metadata.published).strftime('%Y-%m')
+
+        counters = metrics_provider.get_counters() if metrics_provider else {}
+
         return ArxivMetadata(
             arxiv_doi=arxiv_doi,
             arxiv_version=version,
@@ -72,14 +87,18 @@ class ArxivMetadataTransformer:
             authors=arxiv_raw_metadata.authors,
             pdf_url=arxiv_raw_metadata.pdf_url,
             primary_category=arxiv_raw_metadata.primary_category,
-            published_yyyy_mm=published_yyyy_mm
+            published_yyyy_mm=published_yyyy_mm,
+            **counters
         )
 
     @staticmethod
-    def transform_from_list(arxiv_raw_metadatas: List[ArxivRawMetadata]) -> List[ArxivMetadata]:
-        return [
-            ArxivMetadataTransformer.transform(arxiv_raw_metadata=arxiv_raw_metadata) for arxiv_raw_metadata in arxiv_raw_metadatas
+    def transform_from_list(arxiv_raw_metadatas: List[ArxivRawMetadata], metrics_provider: Optional[MetricProvider] = None) -> List[ArxivMetadata]:
+        results = [
+            ArxivMetadataTransformer.transform(arxiv_raw_metadata=arxiv_raw_metadata, metrics_provider=metrics_provider) for arxiv_raw_metadata in arxiv_raw_metadatas
         ]
+
+        return results
+
 
 if __name__ == "__main__":
     pass

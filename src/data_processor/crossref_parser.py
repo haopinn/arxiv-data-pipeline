@@ -10,11 +10,17 @@ from src.schema.crossref_schema import (
     CrossrefRawMetadata
 )
 
+from src.schema_validator.metrics import MetricProvider
+
 class CrossrefAuthorTransformer:
-    @staticmethod
-    def transform(doi: str, sequence_index: int, crossref_raw_author: CrossrefRawAuthor) -> CrossrefAuthor:
+    def __init__(self, metrics_provider: Optional[MetricProvider] = None):
+        self.metrics_provider = metrics_provider
+
+    def transform(self, doi: str, sequence_index: int, crossref_raw_author: CrossrefRawAuthor) -> CrossrefAuthor:
         given_name=crossref_raw_author.given
         family_name=crossref_raw_author.family
+
+        counters = self.metrics_provider.get_counters() if self.metrics_provider else {}
 
         return CrossrefAuthor(
             doi=doi,
@@ -23,21 +29,27 @@ class CrossrefAuthorTransformer:
             full_name=f"{given_name} {family_name}",
             sequence_index=sequence_index,
             sequence_type=crossref_raw_author.sequence,
-            affiliation=crossref_raw_author.affiliation[0].name # for now, only take first affiliation name for example
+            affiliation=crossref_raw_author.affiliation[0].name, # for now, only take first affiliation name for example
+            **counters
         )
 
     def transform_from_list(self, doi: str, crossref_raw_author_list: List[CrossrefRawAuthor]) -> List[CrossrefAuthor]:
-        return [
+        results = [
             self.transform(
                 doi=doi,
                 sequence_index=sequence_index,
-                crossref_raw_author=crossref_raw_author
+                crossref_raw_author=crossref_raw_author,
             )
             for sequence_index, crossref_raw_author in enumerate(crossref_raw_author_list)
         ]
 
+        return results
+
 
 class CrossrefReferenceTransformer:
+    def __init__(self, metrics_provider: Optional[MetricProvider] = None):
+        self.metrics_provider = metrics_provider
+
     @staticmethod
     def determin_reference_title(crossref_raw_reference: CrossrefRawReference) -> str:
         ref_title = ''
@@ -50,6 +62,8 @@ class CrossrefReferenceTransformer:
         return ref_title
 
     def transform(self, doi: str, ref_index: int, crossref_raw_reference: CrossrefRawReference) -> CrossrefReference:
+        counters = self.metrics_provider.get_counters() if self.metrics_provider else {}
+
         return CrossrefReference(
             doi=doi,
             ref_index=ref_index,
@@ -57,11 +71,12 @@ class CrossrefReferenceTransformer:
             ref_author=crossref_raw_reference.author,
             ref_year=crossref_raw_reference.year,
             ref_title=self.determin_reference_title(crossref_raw_reference=crossref_raw_reference),
-            ref_unstructured=crossref_raw_reference.unstructured
+            ref_unstructured=crossref_raw_reference.unstructured,
+            **counters
         )
 
     def transform_from_list(self, doi: str, crossref_raw_reference_list: List[CrossrefRawReference]) -> List[CrossrefReference]:
-        return [
+        results = [
             self.transform(
                 doi=doi,
                 ref_index=ref_index,
@@ -69,6 +84,9 @@ class CrossrefReferenceTransformer:
             )
             for ref_index, crossref_raw_refernece in enumerate(crossref_raw_reference_list)
         ]
+
+
+        return results
 
 class CrossrefMetadataTransformer:
     @staticmethod
@@ -100,10 +118,12 @@ class CrossrefMetadataTransformer:
                 return date(*trimmed_date_parts).strftime('%Y-%m-%d')
         return ''
 
-    def transform(self, arxiv_doi: str, arxiv_version: int, crossref_raw_metadata: CrossrefRawMetadata) -> CrossrefMetadata:
+    def transform(self, arxiv_doi: str, arxiv_version: int, crossref_raw_metadata: CrossrefRawMetadata, metrics_provider: MetricProvider) -> CrossrefMetadata:
         page_start, page_end = self.parse_pages(crossref_raw_metadata.pages)
 
-        return CrossrefMetadata(
+        counters = metrics_provider.get_counters() if metrics_provider else {}
+
+        result = CrossrefMetadata(
             doi=crossref_raw_metadata.doi,
             arxiv_doi=arxiv_doi,
             arxiv_version=arxiv_version,
@@ -117,5 +137,8 @@ class CrossrefMetadataTransformer:
             container_title=crossref_raw_metadata.container_title,
             page_start=page_start,
             page_end=page_end,
-            fulltext_url=crossref_raw_metadata.fulltext_urls[0].url
+            fulltext_url=crossref_raw_metadata.fulltext_urls[0].url,
+            **counters
         )
+
+        return result
