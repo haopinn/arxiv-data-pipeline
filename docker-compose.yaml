@@ -104,6 +104,11 @@ services:
       ZOOKEEPER_SERVERS: zookeeper:2888:3888
     networks:
       - data_platform
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   kafka:
     image: confluentinc/cp-kafka:7.8.0
@@ -130,7 +135,8 @@ services:
       - ./kafka/jmx_prometheus_javaagent-0.19.0.jar:/opt/jmx_exporter/jmx_prometheus_javaagent.jar # JMX exporter JAR
       - ./kafka/jmx-exporter.yml:/opt/jmx_exporter/kafka-metrics.yml # JMX exporter config
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     networks:
       - data_platform
 
