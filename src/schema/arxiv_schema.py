@@ -16,7 +16,7 @@ class ArxivMetadata(DataModelMixin):
     arxiv_doi: str
     arxiv_version: int
     title: str = ""
-    publishded: str = ""
+    published: str = ""
     updated: str = ""
     authors: List[str] = []
     pdf_url: str = ""
