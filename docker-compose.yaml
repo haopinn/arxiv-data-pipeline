@@ -303,9 +303,7 @@ services:
         echo 'Connecting to MinIO...';
         sleep 2;
       done;
-      echo 'Connected to MinIO successfully';
-      
-      # Check if the bucket exists; create it if it does not
+      echo 'Connected to MinIO successfully';      
       if ! /usr/bin/mc ls minio/warehouse >/dev/null 2>&1; then
         echo 'Creating warehouse bucket...';
         /usr/bin/mc mb minio/warehouse;
@@ -314,7 +312,6 @@ services:
       else
         echo 'warehouse bucket already exists, skipping creation';
       fi;
-      
       echo 'MinIO initialization complete';
       tail -f /dev/null
       "
