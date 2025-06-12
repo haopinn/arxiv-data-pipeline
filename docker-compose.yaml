@@ -43,7 +43,8 @@ x-kafka-consumer-common:
   &kafka-consumer-common
   build: .
   depends_on:
-    - kafka
+    kafka:
+      condition: service_healthy
   volumes:
     - ./src/:/app/src/
     - ./docker/:/app/docker/
@@ -117,7 +118,7 @@ services:
     ports:
       - "9092:9092"
       - "29092:29092"
-      - "7071:7071" # JMX exporter port
+      - "7072:7072" # JMX exporter port
     environment:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:19092,EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092,DOCKER://host.docker.internal:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
@@ -130,10 +131,17 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
-      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=7071:/opt/jmx_exporter/kafka-metrics.yml" # Configure JMX exporter as Java agent
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=7072:/opt/jmx_exporter/kafka-metrics.yml" # Configure JMX exporter as Java agent
     volumes:
       - ./kafka/jmx_prometheus_javaagent-0.19.0.jar:/opt/jmx_exporter/jmx_prometheus_javaagent.jar # JMX exporter JAR
       - ./kafka/jmx-exporter.yml:/opt/jmx_exporter/kafka-metrics.yml # JMX exporter config
+    healthcheck:
+      # Use simple netcat test to check if broker url is ready
+      test: ["CMD-SHELL", "nc -z localhost 19092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -151,7 +159,8 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - data_platform
 
@@ -184,8 +193,10 @@ services:
     volumes:
       - ./docker/kafka/connectors:/etc/kafka-connect/jars/
     depends_on:
-      - kafka
-      - kafka-schema-registry
+      kafka:
+        condition: service_healthy
+      kafka-schema-registry:
+        condition: service_started
     command:
       - bash
       - -c
@@ -262,8 +273,10 @@ services:
       - CATALOG_JDBC_USER=airflow
       - CATALOG_JDBC_PASSWORD=airflow
     depends_on:
-      - minio
-      - postgres
+      minio:
+        condition: service_started
+      postgres:
+        condition: service_healthy
 
   spark-iceberg:
     image: tabulario/spark-iceberg
@@ -461,8 +474,10 @@ services:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     ports:
       - "8080:8080"
     networks:
@@ -503,7 +518,8 @@ services:
       KSQL_LISTENERS: http://0.0.0.0:8088/
       KSQL_KSQL_SERVICE_ID: ksqldb-server_
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - data_platform
     profiles:

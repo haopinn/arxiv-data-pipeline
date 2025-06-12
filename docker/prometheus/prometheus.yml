@@ -12,7 +12,7 @@ scrape_configs:
 
   - job_name: 'kafka-jmx'
     static_configs:
-      - targets: ['kafka:7071'] # Scrape metrics from Kafka JMX exporter running as agent on port 7071
+      - targets: ['kafka:7072'] # Scrape metrics from Kafka JMX exporter running as agent on port 7071
 
   - job_name: 'arxiv-data-fetchers'
     static_configs:
