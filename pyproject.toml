@@ -10,12 +10,9 @@ requires-python = ">=3.11,<3.13"
 dependencies = [
     "pandas (==2.1.4)",
     "lxml (>=5.4.0,<6.0.0)",
-    "opensearch-py (>=2.8.0,<3.0.0)",
     "minio (>=7.2.15,<8.0.0)",
     "pyarrow (>=20.0.0,<21.0.0)",
     "pyiceberg (>=0.9.1,<0.10.0)",
-    "pyspark (==3.5.5)",
-    "polars (>=1.30.0,<2.0.0)",
     "setuptools (>=80.8.0,<81.0.0)",
     "kafka-python (>=2.2.10,<3.0.0)",
     "great-expectations (==0.18.21)",
@@ -23,8 +20,6 @@ dependencies = [
     "psycopg2 (>=2.9.10,<3.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "sqlalchemy (==1.4.36)",
-    "apache-airflow (==2.10.5)",
-    "apache-airflow-providers-docker (>=4.4.0,<5.0.0)",
 ]
 
 
