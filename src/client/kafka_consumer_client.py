@@ -12,7 +12,8 @@ def process_arxiv_to_crossref_message(msg: dict):
     message = ArxivToCrossrefMessage.model_validate(msg)
     print("Message is validated.")
     print("Message is ingesting ...")
-    CrossrefDataPipeline.ingest(
+    crossref_data_pipeline = CrossrefDataPipeline()
+    crossref_data_pipeline.ingest(
         arxiv_doi=message.arxiv_doi,
         arxiv_version=message.arxiv_version,
         title=message.title,
@@ -36,7 +37,8 @@ def consume_messages(topic: str, group_id: str, bootstrap_servers: list = KAFKA_
     for msg in consumer:
         try:
             process_arxiv_to_crossref_message(msg.value)  # 傳給自定義處理邏輯
-        except:
+        except Exception as e:
+            print(e)
             print('Do Some Error Handling Here ...')
 
 if __name__ == "__main__":
