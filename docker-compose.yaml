@@ -231,6 +231,22 @@ services:
       WORKER_ID: 'worker_2'
       PROM_PORT: '9102'
 
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    command: [
+        "--kafka.server=kafka:19092",
+        "--group.filter=.*",            # Include all consumer groups
+        "--topic.filter=.*",            # Include all topics
+        "--log.level=info"              # Optional: increase log verbosity
+      ]
+    ports:
+      - 9308:9308
+    networks:
+      - data_platform
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   # spark + iceberg + minio
   minio:
     image: minio/minio
