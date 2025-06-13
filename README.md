@@ -44,7 +44,7 @@
 Use **Docker Compose** to start all services:
 
 ```docker
-docker compose --env-file .env.dev up -d
+docker compose --env-file .env.demo up -d
 ```
 
 > ⚠️ Warning – Demo Environment Only ⚠️
