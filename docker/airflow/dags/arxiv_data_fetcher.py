@@ -5,7 +5,7 @@ from datetime import datetime
 with DAG(
     dag_id="arxiv_data_fetcher",
     start_date=datetime(2025, 6, 9),
-    schedule_interval=None,
+    schedule_interval='* * * * *',
     catchup=False,
 ) as dag:
     arvix_data_fetcher = DockerOperator(

@@ -40,6 +40,7 @@ def consume_messages(topic: str, group_id: str, bootstrap_servers: list = KAFKA_
         except Exception as e:
             print(e)
             print('Do Some Error Handling Here ...')
+            continue
 
 if __name__ == "__main__":
     create_topic_if_needed(topic='arxiv-to-crossref')

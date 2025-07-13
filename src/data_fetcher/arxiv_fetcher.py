@@ -7,8 +7,8 @@ import pandas as pd
 import requests
 from sqlalchemy import text
 
-from src.config import ARXIV_FETCHER_BATCH_SIZE
 from src.client.postgresql_client import arxiv_postgres_session
+from src.config import ARXIV_FETCHER_BATCH_SIZE
 from src.monitoring.arxiv_monitor import ArxivFetcherMetricsCollector
 from src.monitoring.fetcher_monitor import fetcher_prometheus_monitor
 from src.utils.file_utils import ensure_dir_for_file
