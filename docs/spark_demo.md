@@ -1,10 +1,15 @@
+# Description
+
+This document provides examples and guidance for downstream data users (such as **data analysts and data scientists**) to perform data analysis demos using Spark SQL on the output of the data pipeline.
+
+---
+
 1. Close unnecessary Docker services
 
     ```bash
     # Stop Airflow and Kafka related Docker services to free up resources
     docker stop airflow-webserver airflow-worker airflow-scheduler kafka-schema-registry kafka zookeeper arxiv-data-pipeline-kafka-consumer1-1 arxiv-data-pipeline-kafka-consumer2-1 kafka-connect airflow-triggerer
     ```
-    
 2. Start the `spark-iceberg` Docker service
 
     ```bash
@@ -57,7 +62,7 @@
 
             ![image.png](./spark_demo_images/crossref_reference.png)
 
-5. On-Demand Analysis Requirements
+5. Data Analysis Requirements
     1. **Management Dashboard**
         1. **Average Number of Updates per Paper by Discipline**
             
@@ -265,9 +270,9 @@
         
         ![image.png](./spark_demo_images/institutional_ranking.png)
         
-    3. **Abstract/Title Vectorization and Other Feature Extraction**
+    3. **Abstract/Title Vectorization and Other Feature Extraction for futher model exploration**
         
-        This dataset is intended for downstream tasks such as **text embedding** or **recommendation modeling**, and ideally it should include each paper’s **abstract**, which provides the most descriptive summary of its content. However, in the current version of our CrossRef metadata ingestion, the abstract field was not fetched or stored — this is a limitation that **needs to be addressed in future pipeline iterations**.
+        For downstream requirements such as **text embedding** or **recommendation modeling** (especially for roles like data scientists), and ideally it should include each paper’s **abstract**, which provides the most descriptive summary of its content. However, in the current version of our CrossRef metadata ingestion, the abstract field was not fetched or stored — this is a limitation that **needs to be addressed in future pipeline iterations**.
         
         To **partially compensate for the missing abstract**, we enrich the dataset by collecting the **titles of referenced papers** (`ref_titles`). These titles are often thematically related to the main paper and can serve as a **proxy signal for topic modeling** or **semantic embedding**, helping us capture more context for each publication.
         
