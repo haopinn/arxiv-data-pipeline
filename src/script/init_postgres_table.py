@@ -1,7 +1,8 @@
 import pandas as pd
 from sqlalchemy import text
 
-from src.client.postgresql_client import arxiv_postgres_engine as engine
+from src.client.postgresql_client import arxiv_postgres_session
+from src.client.postgresql_client import arxiv_postgres_engine
 
 def init_arxiv_fetch_task_table():
     create_table_query = """
@@ -14,13 +15,16 @@ def init_arxiv_fetch_task_table():
         create_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
     """
-    
-    with engine.connect() as conn:
+
+    with arxiv_postgres_session() as session:
         try:
-            conn.execute(text(create_table_query))
-            conn.commit()
+            session.execute(text(create_table_query))
+            session.commit()
         except:
-            conn.rollback()
-    
+            session.rollback()
+
     arxiv_fetch_task = pd.read_parquet('./src/script/arxiv_fetch_task.parquet')
-    arxiv_fetch_task.to_sql('arxiv_fetch_task', con=engine, if_exists='append', index=False)
+    arxiv_fetch_task.to_sql('arxiv_fetch_task', con=arxiv_postgres_engine, if_exists='append', index=False)
+
+if __name__ == "__main__":
+    init_arxiv_fetch_task_table()
