@@ -57,7 +57,7 @@ If you’re intereted in detail of selecting tools, check  `docs/project_tech_st
 
 # Diagram
 
-![flow_chart.png](https://github.com/haopinn/arxiv-data-pipeline/blob/main/flow_chart.png?raw=true)
+![flow_chart.png](./flow_chart.png)
 
 
 # Directory Structure
